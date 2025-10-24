@@ -1,0 +1,67 @@
+services:
+  # gateway_builder:
+  #   image: maven:3.9.8-eclipse-temurin-21
+  #   container_name: gateway_builder
+  #   network_mode: "host"
+  #   working_dir: /app
+  #   volumes:
+  #     - ./:/app
+  #     - ./settings.xml:/root/.m2/settings.xml
+  #     - maven-repo:/root/.m2
+  #   command: mvn clean package -DskipTests
+  #   environment:
+  #     - HTTP_PROXY=
+  #     - HTTPS_PROXY=
+  #     - NO_PROXY=
+  #   restart: "no"
+
+  # gateway:
+  #   image: eclipse-temurin:21-jre-jammy
+  #   container_name: gateway
+  #   depends_on:
+  #     gateway_builder:
+  #       condition: service_completed_successfully
+  #   working_dir: /app
+  #   volumes:
+  #     - maven-repo:/root/.m2
+  #     - ./target:/app
+  #   command: java -jar gs-gateway-0.0.1-SNAPSHOT.jar
+  #   environment:
+  #     - HTTP_PROXY=
+  #     - HTTPS_PROXY=
+  #     - NO_PROXY=
+  #   # ports:
+  #   #   - "8080:8080"
+  #   networks:
+  #     - gateway_network
+  #   restart: always
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        HTTP_PROXY: 
+        HTTPS_PROXY: 
+        NO_PROXY: 
+    container_name: gateway
+    volumes:
+      - maven-repo:/root/.m2
+    environment:
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=
+    # ports:
+    #   - "8080:8080"
+    networks:
+      - gateway_network
+    restart: always
+    depends_on:
+      - core-frontend
+      - core-backend
+      - core-backend-db
+      - authentication-db
+      - authentication
+      - authentication-backend
+      - authentication-frontend
+      - geo-calculation-engine-app

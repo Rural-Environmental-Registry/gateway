@@ -1,0 +1,62 @@
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+      default-filters:
+        - AddRequestHeader=X-Forwarded-Host, localhost
+        - AddRequestHeader=X-Forwarded-Proto, http
+      routes:
+        - id: authentication-frontend
+          uri: http://authentication-frontend
+          predicates:
+            - Path=/rectest/auth/**
+          filters:
+            - RewriteResponseHeader=Location, http://authentication-frontend(?<segment>/?.*), http://localhost/rectest/auth${segment}
+
+        - id: geo-calculation-engine-app
+          uri: http://geo-calculation-engine-app:8080
+          predicates:
+            - Path=/rectest/calculation-engine/**
+          filters:
+            - StripPrefix=2 # remove /rectest//calculation-engine
+
+        - id: keycloak
+          uri: http://authentication:8080
+          predicates:
+            - Path=/rectest/keycloak/**
+          filters:
+            - RewriteResponseHeader=Location, http://authentication(?<segment>/?.*), http://localhost/rectest/keycloak${segment}
+
+        - id: authentication-backend
+          uri: http://authentication-backend:8081
+          predicates:
+            - Path=/rectest/backend-keycloak/**
+          filters:
+            - RewriteResponseHeader=Location, http://authentication-backend(?<segment>/?.*), http://localhost/rectest/backend-keycloak${segment}
+
+        - id: core-backend
+          uri: http://core-backend:8080
+          predicates:
+            - Path=/rectest/cardpgbackend/**
+          filters:
+            - RewriteResponseHeader=Location, http://core-backend(?<segment>/?.*), http://localhost/rectest/cardpgbackend${segment}
+
+        - id: core-frontend
+          uri: http://core-frontend
+          predicates:
+            - Path=/**
+          filters:
+            - RewriteResponseHeader=Location, http://core-frontend(?<segment>/?.*), http://localhost${segment}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
