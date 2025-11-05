@@ -50,12 +50,23 @@ spring:
           filters:
             - RewriteResponseHeader=Location, http://core-backend(?<segment>/?.*), http://localhost/rectest/cardpgbackend${segment}
 
+        - id: actuator
+          uri: http://localhost
+          predicates:
+            - Path=/actuator/**
+
         - id: core-frontend
           uri: http://core-frontend
           predicates:
             - Path=/**
           filters:
             - RewriteResponseHeader=Location, http://core-frontend(?<segment>/?.*), http://localhost${segment}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
 
 logging:
   level:

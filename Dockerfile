@@ -3,6 +3,10 @@
 # ============================
 FROM maven:3.9.8-eclipse-temurin-21-alpine AS dependencies
 
+# Atualizar pacotes para corrigir CVEs
+RUN apk update && apk upgrade --no-cache
+
+
 ENV http_proxy= \
   https_proxy= \
   no_proxy=

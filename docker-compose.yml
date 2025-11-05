@@ -37,6 +37,7 @@ services:
   #   restart: always
 
   gateway:
+    image: rer-gateway:latest
     build:
       context: .
       dockerfile: Dockerfile
