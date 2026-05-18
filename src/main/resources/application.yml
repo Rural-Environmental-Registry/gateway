@@ -11,58 +11,52 @@ spring:
               - PUT
               - DELETE
               - OPTIONS
-      default-filters:
-        - AddRequestHeader=X-Forwarded-Host, localhost
-        - AddRequestHeader=X-Forwarded-Proto, http
       routes:
-        - id: authentication-frontend
-          uri: http://authentication-frontend
-          predicates:
-            - Path=/rectest/auth/**
-          filters:
-            - RewriteResponseHeader=Location, http://authentication-frontend(?<segment>/?.*), http://localhost/rectest/auth${segment}
-
-        - id: geo-calculation-engine-app
-          uri: http://geo-calculation-engine-app:8080
-          predicates:
-            - Path=/rectest/calculation-engine/**
-          filters:
-            - StripPrefix=2 # remove /rectest//calculation-engine
-
         - id: keycloak
-          uri: http://authentication:8080
+          uri: http://${AUTHENTICATION_BASE_KEYCLOAK_SERVICE_NAME:authentication}:8080
           predicates:
-            - Path=/rectest/keycloak/**
-          filters:
-            - RewriteResponseHeader=Location, http://authentication(?<segment>/?.*), http://localhost/rectest/keycloak${segment}
+            - Path=/keycloak/**
 
         - id: authentication-backend
-          uri: http://authentication-backend:8081
+          uri: http://${AUTHENTICATION_BACKEND_SERVICE_NAME:authentication-backend}:8081
           predicates:
-            - Path=/rectest/backend-keycloak/**
+            - Path=/auth-backend/**
           filters:
-            - RewriteResponseHeader=Location, http://authentication-backend(?<segment>/?.*), http://localhost/rectest/backend-keycloak${segment}
+            - StripPrefix=1
+
+        - id: authentication-frontend
+          uri: http://${AUTHENTICATION_FRONTEND_SERVICE_NAME:authentication-frontend}:8080
+          predicates:
+            - Path=/auth/**
 
         - id: core-backend
-          uri: http://core-backend:8080
+          uri: http://${CORE_BACKEND_API_SERVICE_NAME:core-backend}:8080
           predicates:
-            - Path=/rectest/cardpgbackend/**
+            - Path=/cardpgbackend/**
           filters:
-            - RewriteResponseHeader=Location, http://core-backend(?<segment>/?.*), http://localhost/rectest/cardpgbackend${segment}
+            - StripPrefix=1
+
+        - id: calculation-engine
+          uri: http://${CALCULATION_ENGINE_API_SERVICE_NAME:geo-calculation-engine-app}:8080
+          predicates:
+            - Path=/calculation-engine/**
+          filters:
+            - StripPrefix=1
+
+        - id: geoserver
+          uri: http://${GEOSERVER_SERVICE_NAME:geoserver}:8080
+          predicates:
+            - Path=/geoserver/**
 
         - id: actuator
           uri: http://localhost:8080
           predicates:
-            - Path=/rectest/gateway/actuator/**
-          filters:
-            - StripPrefix=1 # remove /gateway
+            - Path=/actuator/**
 
         - id: core-frontend
-          uri: http://core-frontend
+          uri: http://${CORE_FRONTEND_SERVICE_NAME:core-frontend}:8080
           predicates:
             - Path=/**
-          filters:
-            - RewriteResponseHeader=Location, http://core-frontend(?<segment>/?.*), http://localhost${segment}
 
 management:
   endpoints:
