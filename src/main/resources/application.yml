@@ -20,33 +20,35 @@ spring:
       routes:
         # Keycloak: generates correct redirects via KC_HOSTNAME_URL env var
         - id: keycloak
-          uri: http://${AUTHENTICATION_BASE_KEYCLOAK_SERVICE_NAME:authentication}:8080
+          uri: http://${AUTHENTICATION_BASE_KEYCLOAK_SERVICE_NAME:authentication}:${AUTHENTICATION_BASE_KEYCLOAK_SERVICE_PORT:8080}
           predicates:
             - Path=/keycloak/**
 
         # Auth backend (Spring Boot, port 8081): context-path=/ after StripPrefix
         - id: authentication-backend
-          uri: http://${AUTHENTICATION_BACKEND_SERVICE_NAME:authentication-backend}:8081
+          uri: http://${AUTHENTICATION_BACKEND_SERVICE_NAME:authentication-backend}:${AUTHENTICATION_BACKEND_SERVICE_PORT:8081}
           predicates:
             - Path=/auth-backend/**
           filters:
             - StripPrefix=1
 
-        # Auth frontend (Vue SPA, nginx port 8080): handles its own routing via try_files
+        # Auth frontend (Vue SPA): nginx listens on 8080 in the container, but the
+        # Kubernetes Service exposes port 80. Port is parameterized so the ConfigMap
+        # can set the environment-correct value (K8s: 80, local compose: 8080 default).
         - id: authentication-frontend
-          uri: http://${AUTHENTICATION_FRONTEND_SERVICE_NAME:authentication-frontend}:8080
+          uri: http://${AUTHENTICATION_FRONTEND_SERVICE_NAME:authentication-frontend}:${AUTHENTICATION_FRONTEND_SERVICE_PORT:8080}
           predicates:
             - Path=/auth/**
 
         # Core backend (Spring Boot, port 8080): context-path=/cardpgbackend (no strip needed)
         - id: core-backend
-          uri: http://${CORE_BACKEND_API_SERVICE_NAME:core-backend}:8080
+          uri: http://${CORE_BACKEND_API_SERVICE_NAME:core-backend}:${CORE_BACKEND_API_SERVICE_PORT:8080}
           predicates:
             - Path=/cardpgbackend/**
 
         # Calculation engine (Spring WebFlux, port 8080): context-path=/ after StripPrefix
         - id: calculation-engine
-          uri: http://${CALCULATION_ENGINE_API_SERVICE_NAME:geo-calculation-engine-app}:8080
+          uri: http://${CALCULATION_ENGINE_API_SERVICE_NAME:geo-calculation-engine-app}:${CALCULATION_ENGINE_API_SERVICE_PORT:8080}
           predicates:
             - Path=/calculation-engine/**
           filters:
@@ -54,14 +56,16 @@ spring:
 
         # GeoServer (port 8080): handles /geoserver path internally
         - id: geoserver
-          uri: http://${GEOSERVER_SERVICE_NAME:geoserver}:8080
+          uri: http://${GEOSERVER_SERVICE_NAME:geoserver}:${GEOSERVER_SERVICE_PORT:8080}
           predicates:
             - Path=/geoserver/**
 
-        # Catch-all: core frontend (Vue SPA, nginx port 8080)
+        # Catch-all: core frontend (Vue SPA): nginx listens on 8080 in the container,
+        # but the Kubernetes Service exposes port 80. Port is parameterized so the
+        # ConfigMap can set the environment-correct value (K8s: 80, local compose: 8080).
         # Redirects after login are handled by the frontend app via VITE_AUTH_MODULE_URL
         - id: core-frontend
-          uri: http://${CORE_FRONTEND_SERVICE_NAME:core-frontend}:8080
+          uri: http://${CORE_FRONTEND_SERVICE_NAME:core-frontend}:${CORE_FRONTEND_SERVICE_PORT:8080}
           predicates:
             - Path=/**
 
